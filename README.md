@@ -9,9 +9,9 @@ instrument.
 Pretty dang simple! While Audacity is already running, launch the script telling it the start and
 end times for your loop region:
 
-`python audacity-multitake.py start_time end_time`
+`python audacity-multitake.py start_time end_time prefix`
 
-Audacity will start recording new tracks (with the amount of channels you've set 
+Prefix is optional. Audacity will start recording new tracks (with the amount of channels you've set
 under `Recording Channels`), and when each one is done, the script names and mutes the track
 before making the next one to record.
 
