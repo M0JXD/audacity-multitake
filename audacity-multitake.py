@@ -10,7 +10,9 @@ Usage
 =====
 
 Pass two arguments for start time and end time.
-Pass an optional third argument for the track name prefix.
+Pass an optional third argument for a new gain to be applied to each take
+    (pass zero if you don't want to change but want a prefix)
+Pass an optional fourth argument for the track name prefix.
 That's it :)
 
 ===========
@@ -18,7 +20,6 @@ TODOS/IDEAS
 ===========
 
 - Can we grab the current looping and/or selection from Audacity so we don't need the args?
-- Apply an optional makeup gain 0
 - Punch in/out times to avoid recording lead-in garbage that needs cut
 - Single track mode that exports each take, then the script can switch "in-place" when evaluating
 
@@ -249,22 +250,20 @@ def minsecs_convert(minsecs):
     return (int(minsecs[0]) * 60) + int(minsecs[1])
 
 
-def get_existing_track_amount():
-    client.write("GetInfo: Type=Tracks")
-    json = ""
-    while json == "":
-        json = client.read()
-    return json.count("name")
-
-
 def commander(command):
-    #print("Sending command:" + command)
+    # print("Sending command:" + command)
     client.write(command)
     response = ""
     while response == "":
         response = client.read()
-    #print("Got response: " + response)
+    # print("Got response: " + response)
     return response
+
+
+def get_existing_track_amount():
+    json = commander("GetInfo: Type=Tracks")
+    json = client.read()
+    return json.count("name")
 
 
 if __name__ == "__main__":
@@ -288,7 +287,12 @@ if __name__ == "__main__":
             print(f"Ending at {end_time} seconds.")
 
         if len(sys.argv) > 3:
-            prefix = sys.argv[3] + " Take "
+            gain = float(sys.argv[3])
+        else:
+            gain = 0.0
+
+        if len(sys.argv) > 4:
+            prefix = sys.argv[4] + " Take "
         else:
             prefix = "Take "
     except:
@@ -298,7 +302,8 @@ if __name__ == "__main__":
     existing = get_existing_track_amount()
     take_no = 1
     print(f"Detected {existing} existing track(s).")
-    print(f"Using prefix name: {prefix}")
+    print(f"Track name format: {prefix}1")
+    print(f"Gain for each track: {gain}dB")
     print()
 
     try:
@@ -312,7 +317,8 @@ if __name__ == "__main__":
             commander("Stop")  # commander("PlayStop")
             # Name and mute this track
             commander(f"Select: Track={existing + take_no - 1}")
-            commander("SetTrackVisuals: Height=60")  # Shrink down previous takes
+            commander("SetTrackVisuals: Height=50")  # Shrink down previous takes
+            commander(f"SetTrackAudio: Gain={gain}")
             commander("MuteTracks")
             commander(f'SetTrackStatus: Name="{prefix + str(take_no)}"')
             take_no = take_no + 1
