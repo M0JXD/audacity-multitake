@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-# TODOS:
+# TODOS/IDEAS:
 
-# - Can we grab the current looping and/or selection from audacity so we don't need the args?
+# - Can we grab the current looping and/or selection from Audacity so we don't need the args?
 # - Punch in/out times to avoid recording lead-in garbage that needs cut
-# - Single track mode that exports on each take - once done allows you to switch
-#   the file "in-place" of the track rather than having a gazillion take tracks
+# - Single track mode that exports each take, then the script can switch "in-place" when evaluating
 
 import time, sys
 import pipeclient
