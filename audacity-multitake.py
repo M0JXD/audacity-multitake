@@ -1,6 +1,5 @@
 # TODOS:
 
-# - Allow passing the times as min:secs
 # - Can we grab the current looping and/or selection from audacity so we don't need the args?
 # - Allow a prefix name e.g "Guitar Take 1" or "Drum Take 3" etc.
 # - Fetch from Audacity find out pre-existing track amount
@@ -12,14 +11,27 @@ import time, sys
 import pipeclient
 
 if __name__ == "__main__":
-    print("Audacity MultiTake Helper\n")
+    print("Audacity MultiTake Helper")
     if len(sys.argv) < 3 or len(sys.argv) > 5:
         print("Specify at least two arguments for the start and end time!")
         exit()
 
     try:
-        start_time = float(sys.argv[1])
-        end_time = float(sys.argv[2])
+        if ":" in sys.argv[1]:
+            minsecs = sys.argv[1].split(":", 1)
+            start_time = (int(minsecs[0]) * 60) + int(minsecs[1])
+            print(f"Starting at {sys.argv[1]} ({start_time} seconds).")
+        else:
+            start_time = float(sys.argv[1])
+            print(f"Starting at {start_time} seconds.")
+        if ":" in sys.argv[2]:
+            minsecs = sys.argv[2].split(":", 1)
+            end_time = (int(minsecs[0]) * 60) + int(minsecs[1])
+            print(f"Ending at {sys.argv[2]} ({end_time} seconds).")
+        else:
+            end_time = float(sys.argv[2])
+            print(f"Ending at {end_time} seconds.")
+
         if len(sys.argv) > 3:
             preexisting_tracks = int(sys.argv[3])
         else:
@@ -32,9 +44,9 @@ if __name__ == "__main__":
     client = pipeclient.PipeClient()
 
     # Select the region to playback
-    # NB: We don't actually wan't to reach the end time so just "set the cursor"
+    # We don't actually want to reach the end time so just "set the cursor"
     client.write(f"Select: Start={start_time} End={start_time}")
-
+    print()
     try:
         while True:
             print(f"Recording new track: Take {take_no}")
@@ -59,4 +71,4 @@ if __name__ == "__main__":
         client.write("CursSelStart")
         client.write(f"Select: Track={preexisting_tracks + take_no - 1}")
         client.write(f'SetTrackStatus: Name="Take {take_no}"')
-        print(f"{take_no} takes recorded!")
+        print(f"{take_no} takes recorded.")
