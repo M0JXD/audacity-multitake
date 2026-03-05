@@ -5,17 +5,18 @@
 
 This script includes what it needs from pipeclient to keep it to a single file.
 
-======
+=====
 Usage
-======
+=====
 
 Pass two arguments for start time and end time.
 Pass an optional third argument for the track name.
 That's it :)
 
-======
+===========
 TODOS/IDEAS
-======
+===========
+
 - Can we grab the current looping and/or selection from Audacity so we don't need the args?
 - Punch in/out times to avoid recording lead-in garbage that needs cut
 - Single track mode that exports each take, then the script can switch "in-place" when evaluating
