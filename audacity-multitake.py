@@ -314,7 +314,7 @@ if __name__ == "__main__":
             # Start recording on a new track and wait for that to finish
             commander("Record2ndChoice")
             # Stop and reset the cursor
-            commander("Stop")  # commander("PlayStop")
+            commander("Stop")
             # Name and mute this track
             commander(f"Select: Track={existing + take_no - 1}")
             commander("SetTrackVisuals: Height=50")  # Shrink down previous takes
@@ -325,7 +325,7 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         print("\nStopping takes...")
-        commander("Stop")  # commander("PlayStop")
+        commander("Stop")
         commander(f"Select: Start={start_time} End={end_time}")
         commander(f"Select: Track={existing + take_no - 1}")
         commander(f'SetTrackStatus: Name="{prefix + str(take_no)}"')
