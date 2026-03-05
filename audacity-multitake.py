@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # TODOS:
 
 # - Can we grab the current looping and/or selection from audacity so we don't need the args?
