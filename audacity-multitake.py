@@ -79,7 +79,7 @@ if __name__ == "__main__":
             take_no = take_no + 1
 
     except KeyboardInterrupt:
-        print("\nStopping!")
+        print("\nStopping takes...")
         client.write("Pause")
         client.write("PlayStop")
         client.write("CursSelStart")
