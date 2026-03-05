@@ -78,22 +78,22 @@ import argparse
 
 
 if sys.version_info[0] < 3 and sys.version_info[1] < 7:
-    sys.exit('PipeClient Error: Python 2.7 or later required')
+    sys.exit("PipeClient Error: Python 2.7 or later required")
 
 # Platform specific constants
-if sys.platform == 'win32':
-    WRITE_NAME = '\\\\.\\pipe\\ToSrvPipe'
-    READ_NAME = '\\\\.\\pipe\\FromSrvPipe'
-    EOL = '\r\n\0'
+if sys.platform == "win32":
+    WRITE_NAME = "\\\\.\\pipe\\ToSrvPipe"
+    READ_NAME = "\\\\.\\pipe\\FromSrvPipe"
+    EOL = "\r\n\0"
 else:
     # Linux or Mac
-    PIPE_BASE = '/tmp/audacity_script_pipe.'
-    WRITE_NAME = PIPE_BASE + 'to.' + str(os.getuid())
-    READ_NAME = PIPE_BASE + 'from.' + str(os.getuid())
-    EOL = '\n'
+    PIPE_BASE = "/tmp/audacity_script_pipe."
+    WRITE_NAME = PIPE_BASE + "to." + str(os.getuid())
+    READ_NAME = PIPE_BASE + "from." + str(os.getuid())
+    EOL = "\n"
 
 
-class PipeClient():
+class PipeClient:
     """Write / read client access to Audacity via named pipes.
 
     Normally there should be just one instance of this class. If
@@ -129,16 +129,16 @@ class PipeClient():
 
     _shared_state = {}
 
-    def __new__(cls, enc='', *p, **k):
+    def __new__(cls, enc="", *p, **k):
         self = object.__new__(cls, *p, **k)
         self.__dict__ = cls._shared_state
         return self
 
-    def __init__(self, enc=''):
+    def __init__(self, enc=""):
         self.timer = False
         self._start_time = 0
         self._write_pipe = None
-        self.reply = ''
+        self.reply = ""
         self.enc = enc
         if not self._write_pipe:
             self._write_thread_start()
@@ -154,15 +154,14 @@ class PipeClient():
         # Allow a little time for connection to be made.
         time.sleep(0.1)
         if not self._write_pipe:
-            sys.exit('PipeClientError: Write pipe cannot be opened.')
+            sys.exit("PipeClientError: Write pipe cannot be opened.")
 
     def _write_pipe_open(self):
         """Open _write_pipe."""
         if self.enc:
-            self._write_pipe = open(WRITE_NAME, 'w', newline='',
-                                    encoding=self.enc)
+            self._write_pipe = open(WRITE_NAME, "w", newline="", encoding=self.enc)
         else:
-            self._write_pipe = open(WRITE_NAME, 'w', newline='')
+            self._write_pipe = open(WRITE_NAME, "w", newline="")
 
     def _read_thread_start(self):
         """Start read_pipe thread."""
@@ -186,20 +185,20 @@ class PipeClient():
 
         """
         self.timer = timer
-        print('Sending command:', command)
+        # print('Sending command:', command)
         self._write_pipe.write(command + EOL)
         # Check that read pipe is alive
         if PipeClient.reader_pipe_broken.isSet():
-            sys.exit('PipeClient: Read-pipe error.')
+            sys.exit("PipeClient: Read-pipe error.")
         try:
             self._write_pipe.flush()
             if self.timer:
                 self._start_time = time.time()
-            self.reply = ''
+            self.reply = ""
             PipeClient.reply_ready.clear()
         except IOError as err:
             if err.errno == errno.EPIPE:
-                sys.exit('PipeClient: Write-pipe error.')
+                sys.exit("PipeClient: Write-pipe error.")
             else:
                 raise
 
@@ -209,29 +208,29 @@ class PipeClient():
         # Connection should occur as soon as _write_pipe has connected.
         read_pipe = None
         if self.enc:
-            read_pipe = open(READ_NAME, 'r', newline='', encoding=self.enc)
+            read_pipe = open(READ_NAME, "r", newline="", encoding=self.enc)
         else:
-            read_pipe = open(READ_NAME, 'r', newline='')
-        message = ''
+            read_pipe = open(READ_NAME, "r", newline="")
+        message = ""
         pipe_ok = True
         while pipe_ok:
             line = read_pipe.readline()
             # Stop timer as soon as we get first line of response.
             stop_time = time.time()
-            while pipe_ok and line != '\n':
+            while pipe_ok and line != "\n":
                 message += line
                 line = read_pipe.readline()
-                if line == '':
+                if line == "":
                     # No data in read_pipe indicates that the pipe is broken
                     # (Audacity may have crashed).
                     PipeClient.reader_pipe_broken.set()
                     pipe_ok = False
             if self.timer:
                 xtime = (stop_time - self._start_time) * 1000
-                message += 'Execution time: {0:.2f}ms'.format(xtime)
+                message += "Execution time: {0:.2f}ms".format(xtime)
             self.reply = message
             PipeClient.reply_ready.set()
-            message = ''
+            message = ""
         read_pipe.close()
 
     def read(self):
@@ -246,33 +245,52 @@ class PipeClient():
 
         """
         if not PipeClient.reply_ready.isSet():
-            return ''
+            return ""
         return self.reply
 
 
 def bool_from_string(strval):
     """Return boolean value from string"""
-    if strval.lower() in ('true', 't', '1', 'yes', 'y'):
+    if strval.lower() in ("true", "t", "1", "yes", "y"):
         return True
-    if strval.lower() in ('false', 'f', '0', 'no', 'n'):
+    if strval.lower() in ("false", "f", "0", "no", "n"):
         return False
-    raise argparse.ArgumentTypeError('Boolean value expected.')
+    raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def main():
     """Interactive command-line for PipeClient"""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--timeout', type=float, metavar='', default=10,
-                        help="timeout for reply in seconds (default: 10")
-    parser.add_argument('-s', '--show-time', metavar='True/False',
-                        nargs='?', type=bool_from_string,
-                        const='t', default='t', dest='show',
-                        help='show command execution time (default: True)')
-    parser.add_argument('-d', '--docs', action='store_true',
-                        help='show documentation and exit')
-    parser.add_argument('-e', '--pipe-encoding', type=str, default='',
-                        help='non-default encoding to use for r/w pipes')
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=float,
+        metavar="",
+        default=10,
+        help="timeout for reply in seconds (default: 10",
+    )
+    parser.add_argument(
+        "-s",
+        "--show-time",
+        metavar="True/False",
+        nargs="?",
+        type=bool_from_string,
+        const="t",
+        default="t",
+        dest="show",
+        help="show command execution time (default: True)",
+    )
+    parser.add_argument(
+        "-d", "--docs", action="store_true", help="show documentation and exit"
+    )
+    parser.add_argument(
+        "-e",
+        "--pipe-encoding",
+        type=str,
+        default="",
+        help="non-default encoding to use for r/w pipes",
+    )
     args = parser.parse_args()
 
     if args.docs:
@@ -281,26 +299,26 @@ def main():
 
     client = PipeClient(enc=args.pipe_encoding)
     while True:
-        reply = ''
+        reply = ""
         if sys.version_info[0] < 3:
             message = raw_input("\nEnter command or 'Q' to quit: ")
         else:
             message = input("\nEnter command or 'Q' to quit: ")
         start = time.time()
-        if message.upper() == 'Q':
+        if message.upper() == "Q":
             sys.exit(0)
-        elif message == '':
+        elif message == "":
             pass
         else:
             client.write(message, timer=args.show)
-            while reply == '':
+            while reply == "":
                 time.sleep(0.1)  # allow time for reply
                 if time.time() - start > args.timeout:
-                    reply = 'PipeClient: Reply timed-out.'
+                    reply = "PipeClient: Reply timed-out."
                 else:
                     reply = client.read()
             print(reply)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
