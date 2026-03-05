@@ -10,7 +10,7 @@ Usage
 =====
 
 Pass two arguments for start time and end time.
-Pass an optional third argument for the track name.
+Pass an optional third argument for the track name prefix.
 That's it :)
 
 ===========
@@ -18,6 +18,7 @@ TODOS/IDEAS
 ===========
 
 - Can we grab the current looping and/or selection from Audacity so we don't need the args?
+- Apply an optional makeup gain 0
 - Punch in/out times to avoid recording lead-in garbage that needs cut
 - Single track mode that exports each take, then the script can switch "in-place" when evaluating
 
@@ -256,6 +257,16 @@ def get_existing_track_amount():
     return json.count("name")
 
 
+def commander(command):
+    #print("Sending command:" + command)
+    client.write(command)
+    response = ""
+    while response == "":
+        response = client.read()
+    #print("Got response: " + response)
+    return response
+
+
 if __name__ == "__main__":
     print("===== Audacity MultiTake Helper =====")
     if len(sys.argv) < 3 or len(sys.argv) > 5:
@@ -288,33 +299,28 @@ if __name__ == "__main__":
     take_no = 1
     print(f"Detected {existing} existing track(s).")
     print(f"Using prefix name: {prefix}")
-
-    # Select the region to playback
-    # We don't actually want to reach the end time so just "set the cursor"
-    client.write(f"Select: Start={start_time} End={start_time}")
     print()
+
     try:
         while True:
+            # Set the recording region
+            commander(f"Select: Start={start_time} End={end_time}")
             print(f"Recording new track: {prefix + str(take_no)}")
-            # Start recording on a new track
-            client.write("Record2ndChoice")
-            # Wait the time of the take
-            # TODO: IDK why we need a different time for the first take?
-            time.sleep((end_time - start_time) + (take_no == 1 and 0.7 or 1.1))
+            # Start recording on a new track and wait for that to finish
+            commander("Record2ndChoice")
             # Stop and reset the cursor
-            client.write("PlayStop")
+            commander("Stop")  # commander("PlayStop")
             # Name and mute this track
-            client.write(f"Select: Track={existing + take_no - 1}")
-            client.write("SetTrackVisuals: Height=50")  # Shrink down previous takes
-            client.write("MuteTracks")
-            client.write(f'SetTrackStatus: Name="{prefix + str(take_no)}"')
+            commander(f"Select: Track={existing + take_no - 1}")
+            commander("SetTrackVisuals: Height=60")  # Shrink down previous takes
+            commander("MuteTracks")
+            commander(f'SetTrackStatus: Name="{prefix + str(take_no)}"')
             take_no = take_no + 1
 
     except KeyboardInterrupt:
         print("\nStopping takes...")
-        client.write("Pause")
-        client.write("PlayStop")
-        client.write("CursSelStart")
-        client.write(f"Select: Track={existing + take_no - 1}")
-        client.write(f'SetTrackStatus: Name="{prefix + str(take_no)}"')
+        commander("Stop")  # commander("PlayStop")
+        commander(f"Select: Start={start_time} End={end_time}")
+        commander(f"Select: Track={existing + take_no - 1}")
+        commander(f'SetTrackStatus: Name="{prefix + str(take_no)}"')
         print(f"{take_no} takes recorded.")
