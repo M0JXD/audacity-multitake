@@ -4,6 +4,8 @@ A small and simple helper utility to implement the one killer feature I'm missin
 A hands free loop recorder to make multiple takes without needing to take my hands away from my
 instrument.
 
+NB: To get the best use of this you should set your [latency compensation](https://support.audacityteam.org/troubleshooting/solving-recording-problems/latency-compensation).
+
 ## Usage
 
 Make sure [Python](https://www.python.org/downloads/) is installed and enable
